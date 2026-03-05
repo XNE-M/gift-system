@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>礼品选品系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="app-header">
+  <div class="app-title">
+    <div class="app-title__main">🎁 Gift Selection System</div>
+    <div class="app-title__sub">内部选品与报价工具</div>
+  </div>
+
+  <nav class="app-nav">
+    <button class="nav-btn" data-target="page-add">新增礼品</button>
+    <button class="nav-btn" data-target="page-import">Excel导入</button>
+    <button class="nav-btn" data-target="page-manage">礼品库管理</button>
+    <button class="nav-btn nav-btn--primary" data-target="page-quote">生成报价</button>
+  </nav>
+</header>
+
+<main class="app-main">
+  <!-- 一、新增礼品资料 -->
+  <section class="page panel" id="page-add">
+    <h2>新增礼品资料</h2>
+
+    <div class="form-grid">
+      <label>名称
+        <input type="text" id="add_name" placeholder="例如：保温杯">
+      </label>
+
+      <label>供应商
+        <input type="text" id="add_supplier" placeholder="例如：供应商A">
+      </label>
+
+      <label>成本价
+        <input type="number" id="add_cost" placeholder="例如：45">
+      </label>
+
+      <label>MOQ
+        <input type="number" id="add_moq" placeholder="例如：100">
+      </label>
+
+      <label>分类
+        <select id="add_category">
+          <option value="">（未选择）</option>
+          <option value="健康类">健康类</option>
+          <option value="办公类">办公类</option>
+          <option value="生活类">生活类</option>
+          <option value="数码类">数码类</option>
+          <option value="食品类">食品类</option>
+          <option value="其他">其他</option>
+        </select>
+      </label>
+
+      <label>节日
+        <select id="add_festival">
+          <option value="">（未选择）</option>
+          <option value="春节">春节</option>
+          <option value="女神节">女神节</option>
+          <option value="商务">商务</option>
+          <option value="中秋">中秋</option>
+          <option value="年会">年会</option>
+          <option value="通用">通用</option>
+        </select>
+      </label>
+
+      <label class="checkbox-row">是否可定制
+        <input type="checkbox" id="add_customizable">
+      </label>
+
+      <label>包装规格
+        <input type="text" id="add_packageSpec" placeholder="例如：礼盒装 / 单个装">
+      </label>
+
+      <label>外箱尺寸
+        <input type="text" id="add_cartonSize" placeholder="例如：40×30×20cm">
+      </label>
+
+      <label>包装体积
+        <select id="add_volume">
+          <option value="">不限</option>
+          <option value="精致小巧">精致小巧</option>
+          <option value="体积大">体积大</option>
+        </select>
+      </label>
+
+      <label>图片上传
+        <input type="file" id="add_image" accept="image/*">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary" id="btnSaveGift">保存礼品</button>
+      <div class="hint" id="add_hint">保存后会进入礼品库，可在“礼品库管理”查看。</div>
+    </div>
+  </section>
+
+  <!-- 二、Excel 导入 -->
+  <section class="page panel" id="page-import">
+    <h2>Excel 导入</h2>
+    <p class="muted">
+      选择包含礼品名称和成本的 Excel 文件（默认读取第 1 个工作表）。表头需要包含：<b>名称</b>、<b>成本</b>。
+    </p>
+
+    <div class="actions">
+      <input type="file" id="excelFile" accept=".xlsx,.xls">
+      <div class="hint" id="giftCount">当前礼品数：0</div>
+    </div>
+
+    <div class="panel panel--sub">
+      <h3>Excel 示例表头</h3>
+      <div class="code-like">名称 | 成本 | 供应商 | MOQ | 分类 | 节日 | 是否可定制 | 包装规格 | 外箱尺寸 | 包装体积</div>
+      <p class="muted">除“名称/成本”外其它列可选填，不填也能导入。</p>
+    </div>
+  </section>
+
+  <!-- 三、礼品库管理 -->
+  <section class="page panel" id="page-manage">
+    <h2>礼品库管理</h2>
+    <div class="actions">
+      <input type="text" id="giftSearch" placeholder="搜索：名称 / 供应商 / 分类 / 节日">
+      <button class="btn" id="btnClearAll">清空礼品库</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table" id="giftTable">
+        <thead>
+          <tr>
+            <th>图片</th>
+            <th>名称</th>
+            <th>供应商</th>
+            <th>成本</th>
+            <th>MOQ</th>
+            <th>分类</th>
+            <th>节日</th>
+            <th>可定制</th>
+            <th>体积</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 四、生成报价（核心） -->
+  <section class="page panel" id="page-quote">
+    <h2>客户需求筛选</h2>
+
+    <div class="form-grid">
+      <label>预算范围（元）
+        <div class="inline">
+          <input type="number" id="budgetMin" placeholder="例如 100">
+          <span class="inline-sep">-</span>
+          <input type="number" id="budgetMax" placeholder="例如 300">
+        </div>
+      </label>
+
+      <label>节日类型
+        <select id="filterFestival">
+          <option value="">不限</option>
+          <option value="商务">商务</option>
+          <option value="春节">春节</option>
+          <option value="女神节">女神节</option>
+          <option value="中秋">中秋</option>
+          <option value="年会">年会</option>
+          <option value="通用">通用</option>
+        </select>
+      </label>
+
+      <label>礼品分类
+        <select id="filterCategory">
+          <option value="">不限</option>
+          <option value="健康类">健康类</option>
+          <option value="办公类">办公类</option>
+          <option value="生活类">生活类</option>
+          <option value="数码类">数码类</option>
+          <option value="食品类">食品类</option>
+          <option value="其他">其他</option>
+        </select>
+      </label>
+
+      <label>风格关键词
+        <input type="text" id="filterKeywords" placeholder="例如：年轻 女性 高级感">
+      </label>
+
+      <label class="checkbox-row">是否可定制
+        <input type="checkbox" id="filterCustomizable">
+      </label>
+
+      <label>包装体积
+        <div class="radio-row">
+          <label><input type="radio" name="filterVolume" value="" checked>不限</label>
+          <label><input type="radio" name="filterVolume" value="精致小巧">精致小巧</label>
+          <label><input type="radio" name="filterVolume" value="体积大">体积大</label>
+        </div>
+      </label>
+
+      <label>目标利润率（%）
+        <input type="number" id="profit" value="30">
+      </label>
+
+      <label>默认数量（每个礼品）
+        <input type="number" id="defaultQty" value="100">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary" id="btnStartSelect">开始选品</button>
+      <div class="hint" id="quoteHint">提示：预算范围会自动取上限作为选品预算。</div>
+    </div>
+
+    <div class="split">
+      <div class="panel panel--sub">
+        <h3>推荐礼品组合</h3>
+        <div id="result"></div>
+        <div class="actions">
+          <button class="btn" id="btnOpenAdjust" disabled>微调组合</button>
+          <button class="btn btn--primary" id="btnOpenQuote" disabled>生成报价单</button>
+        </div>
+      </div>
+
+      <div class="panel panel--sub" id="adjustPanel" style="display:none;">
+        <h3>组合调整</h3>
+        <div id="adjustList"></div>
+        <div class="form-grid">
+          <label>修改整体利润率（%）
+            <input type="number" id="adjustProfit" value="30">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btnRecalc">重新计算报价</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel--sub" id="quotePanel" style="display:none;">
+      <h3>报价预览</h3>
+      <div class="form-grid">
+        <label>客户名称
+          <input type="text" id="customerName" placeholder="例如：某某公司">
+        </label>
+        <label>项目名称
+          <input type="text" id="projectName" placeholder="例如：春节员工福利礼盒">
+        </label>
+      </div>
+
+      <div id="quotePreview"></div>
+
+      <div class="actions">
+        <button class="btn" id="btnExportPDF">导出PDF</button>
+        <button class="btn" id="btnExportExcel">导出Excel</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
